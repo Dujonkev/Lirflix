@@ -21,8 +21,22 @@ liens de lecture ou de téléchargement des épisodes et ne les expose pas.
   dernier épisode, attributs = titre de l'épisode, jour/heure de
   diffusion, nombre total d'épisodes disponibles, URL de la page de
   l'émission.
+- Un capteur global `sensor.lirflix_nouveaux_episodes` (dès que plus
+  d'une émission est suivie) : état = nombre d'épisodes pas encore
+  acquittés, tous suivis confondus, avec en attributs la liste des
+  émissions concernées et le titre de la dernière détectée. Le service
+  `lirflix.mark_all_seen` (voir plus bas) remet ce compteur à zéro.
+- Une entité calendrier `calendar.lirflix_planning` qui présente, pour
+  chaque émission suivie, le jour et l'heure de diffusion habituels tels
+  qu'annoncés sur le site (créneau récurrent de 30 minutes, purement
+  indicatif : ce n'est pas une confirmation qu'un épisode précis sera
+  diffusé à une date donnée). S'affiche directement dans les vues
+  Calendrier de Home Assistant.
 - Événement `lirflix_new_episode` (slug, titre de l'émission, numéro et
   titre de l'épisode, URL) à chaque nouvelle parution détectée.
+- Service `lirflix.mark_all_seen` pour acquitter manuellement les
+  derniers épisodes connus (toutes émissions, ou une seule entrée de
+  configuration via le champ optionnel `config_entry_id`).
 - Sélection des émissions suivies et intervalle de vérification
   configurables depuis l'interface, modifiables à tout moment sans
   recréer l'intégration.
@@ -74,6 +88,21 @@ action:
 Filtrez sur une émission précise avec une condition sur
 `trigger.event.data.slug` (ex : `laa9`).
 
+## Exemple : acquitter tous les nouveaux épisodes
+
+```yaml
+service: lirflix.mark_all_seen
+```
+
+Ou pour une seule entrée de configuration (utile si plusieurs entrées
+Lirflix sont configurées) :
+
+```yaml
+service: lirflix.mark_all_seen
+data:
+  config_entry_id: "01ABCXYZEXEMPLE"
+```
+
 ## Dépannage
 
 - **Une émission n'apparaît pas** : vérifiez qu'elle existe toujours
@@ -95,7 +124,10 @@ Aucune donnée de lecture ou de téléchargement (liens de streaming,
 hébergeurs de fichiers) n'est récupérée ni exposée : seule
 l'information « un épisode X est sorti » est fournie, à l'image d'un
 guide TV. Le lien fourni (`url`) pointe vers la page publique de
-l'émission, pas vers un flux de lecture.
+l'émission, pas vers un flux de lecture. Il en va de même pour le
+calendrier : le jour/heure affiché est celui annoncé publiquement pour
+la diffusion habituelle de l'émission, pas une donnée issue des liens
+de lecture.
 
 ## Avertissement
 

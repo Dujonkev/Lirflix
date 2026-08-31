@@ -37,6 +37,26 @@
     "sensor": {
       "latest_episode": {
         "name": "Latest episode"
+      },
+      "new_episodes": {
+        "name": "New episodes"
+      }
+    },
+    "calendar": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    }
+  },
+  "services": {
+    "mark_all_seen": {
+      "name": "Mark all as seen",
+      "description": "Marks the latest known episode of every tracked show (or a single config entry) as seen, resetting the new episodes counter.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config entry",
+          "description": "Optional: only mark this Lirflix configuration entry as seen. If omitted, applies to all Lirflix entries."
+        }
       }
     }
   }

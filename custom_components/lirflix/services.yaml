@@ -1,0 +1,17 @@
+mark_all_seen:
+  name: Tout marquer comme vu
+  description: >-
+    Marque le dernier épisode connu de chaque émission suivie (ou d'une
+    seule entrée de configuration) comme vu, ce qui remet à zéro le
+    compteur du capteur "Nouveaux épisodes".
+  fields:
+    config_entry_id:
+      name: Entrée de configuration
+      description: >-
+        Optionnel : ne marquer comme vue que cette entrée de configuration
+        Lirflix. Si omis, s'applique à toutes les entrées Lirflix
+        configurées.
+      required: false
+      selector:
+        config_entry:
+          integration: lirflix

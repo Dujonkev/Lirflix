@@ -13,14 +13,27 @@ utilisées.
 """
 from __future__ import annotations
 
+import voluptuous as vol
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SCAN_INTERVAL_MINUTES, CONF_SHOWS, DEFAULT_SCAN_INTERVAL_MINUTES, DOMAIN
+from .const import (
+    CONF_SCAN_INTERVAL_MINUTES,
+    CONF_SHOWS,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    DOMAIN,
+    SERVICE_MARK_ALL_SEEN,
+)
 from .coordinator import LirflixCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.CALENDAR]
+
+_MARK_ALL_SEEN_SCHEMA = vol.Schema(
+    {vol.Optional("config_entry_id"): cv.string}
+)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,7 +44,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_SCAN_INTERVAL_MINUTES, DEFAULT_SCAN_INTERVAL_MINUTES),
     )
 
-    coordinator = LirflixCoordinator(hass, tracked_slugs, scan_interval)
+    coordinator = LirflixCoordinator(hass, entry.entry_id, tracked_slugs, scan_interval)
+    await coordinator.async_load_stored_state()
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -39,7 +53,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    _async_register_services(hass)
     return True
+
+
+def _async_register_services(hass: HomeAssistant) -> None:
+    """Enregistre les services Lirflix (une seule fois, au premier setup)."""
+    if hass.services.has_service(DOMAIN, SERVICE_MARK_ALL_SEEN):
+        return
+
+    async def _async_mark_all_seen(call: ServiceCall) -> None:
+        entry_id = call.data.get("config_entry_id")
+        coordinators: dict[str, LirflixCoordinator] = hass.data.get(DOMAIN, {})
+        targets = (
+            [coordinators[entry_id]] if entry_id and entry_id in coordinators
+            else list(coordinators.values())
+        )
+        for coordinator in targets:
+            await coordinator.async_mark_all_seen()
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_MARK_ALL_SEEN, _async_mark_all_seen, schema=_MARK_ALL_SEEN_SCHEMA
+    )
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

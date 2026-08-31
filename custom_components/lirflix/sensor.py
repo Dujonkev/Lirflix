@@ -14,9 +14,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     ATTR_AIR_DAY,
     ATTR_AIR_TIME,
+    ATTR_EPISODE_NUMBER,
     ATTR_EPISODE_TITLE,
     ATTR_IMAGE,
     ATTR_LAST_UPDATED,
+    ATTR_LATEST_SHOW_TITLE,
+    ATTR_PENDING_SHOWS,
     ATTR_SHOW_TITLE,
     ATTR_TOTAL_EPISODES,
     ATTR_URL,
@@ -35,9 +38,12 @@ async def async_setup_entry(
     coordinator: LirflixCoordinator = hass.data[DOMAIN][entry.entry_id]
     tracked_slugs: list[str] = entry.data.get(CONF_SHOWS, [])
 
-    entities = [
+    entities: list[SensorEntity] = [
         LirflixEpisodeSensor(coordinator, entry.entry_id, slug) for slug in tracked_slugs
     ]
+    if len(tracked_slugs) > 1:
+        # Le capteur global n'a d'intérêt que si plusieurs émissions sont suivies.
+        entities.append(LirflixNewEpisodesSensor(coordinator, entry.entry_id))
     async_add_entities(entities)
 
 
@@ -93,4 +99,52 @@ class LirflixEpisodeSensor(CoordinatorEntity[LirflixCoordinator], SensorEntity):
         show = self._show
         if show and show.get(ATTR_IMAGE):
             return f"https://lirflix.net/{show[ATTR_IMAGE]}"
+        return None
+
+
+class LirflixNewEpisodesSensor(CoordinatorEntity[LirflixCoordinator], SensorEntity):
+    """Capteur global : nombre d'épisodes pas encore acquittés, tous suivis confondus.
+
+    Le compteur se remet à zéro via le service `lirflix.mark_all_seen`.
+    """
+
+    _attr_icon = "mdi:bell-badge-outline"
+    _attr_has_entity_name = True
+    _attr_translation_key = "new_episodes"
+
+    def __init__(self, coordinator: LirflixCoordinator, entry_id: str) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_new_episodes"
+
+    @property
+    def native_value(self) -> int:
+        return len(self.coordinator.pending_shows)
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        return "épisodes"
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        pending = self.coordinator.pending_shows
+        latest = self.coordinator.latest_show
+        return {
+            ATTR_PENDING_SHOWS: [
+                {
+                    ATTR_SHOW_TITLE: show.get(ATTR_SHOW_TITLE),
+                    ATTR_EPISODE_NUMBER: show.get(ATTR_EPISODE_NUMBER),
+                    ATTR_EPISODE_TITLE: show.get(ATTR_EPISODE_TITLE),
+                    ATTR_URL: show.get(ATTR_URL),
+                }
+                for show in pending
+            ],
+            ATTR_LATEST_SHOW_TITLE: latest.get(ATTR_SHOW_TITLE) if latest else None,
+            ATTR_LAST_UPDATED: datetime.now(timezone.utc).isoformat(),
+        }
+
+    @property
+    def entity_picture(self) -> str | None:
+        latest = self.coordinator.latest_show
+        if latest and latest.get(ATTR_IMAGE):
+            return f"https://lirflix.net/{latest[ATTR_IMAGE]}"
         return None
