@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lirflix - Suivi des épisodes",
+        "description": "Sélectionnez les émissions à suivre. Un capteur sera créé pour chacune, indiquant le dernier épisode publié.",
+        "data": {
+          "shows": "Émissions à suivre",
+          "scan_interval_minutes": "Intervalle de vérification (minutes)"
+        }
+      }
+    },
+    "error": {
+      "no_shows_selected": "Veuillez sélectionner au moins une émission.",
+      "cannot_connect": "Impossible de récupérer la liste des émissions depuis lirflix.net."
+    },
+    "abort": {
+      "already_configured": "Cette sélection d'émissions est déjà configurée.",
+      "cannot_connect": "Impossible de récupérer la liste des émissions depuis lirflix.net."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lirflix - Options",
+        "data": {
+          "shows": "Émissions à suivre",
+          "scan_interval_minutes": "Intervalle de vérification (minutes)"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Impossible de récupérer la liste des émissions depuis lirflix.net."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_episode": {
+        "name": "Dernier épisode"
+      }
+    }
+  }
+}

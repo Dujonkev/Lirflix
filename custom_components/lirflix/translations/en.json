@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Lirflix - Episode tracking",
+        "description": "Select the shows to track. A sensor will be created for each one, showing the latest published episode.",
+        "data": {
+          "shows": "Shows to track",
+          "scan_interval_minutes": "Check interval (minutes)"
+        }
+      }
+    },
+    "error": {
+      "no_shows_selected": "Please select at least one show.",
+      "cannot_connect": "Could not fetch the list of shows from lirflix.net."
+    },
+    "abort": {
+      "already_configured": "This selection of shows is already configured.",
+      "cannot_connect": "Could not fetch the list of shows from lirflix.net."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Lirflix - Options",
+        "data": {
+          "shows": "Shows to track",
+          "scan_interval_minutes": "Check interval (minutes)"
+        }
+      }
+    },
+    "abort": {
+      "cannot_connect": "Could not fetch the list of shows from lirflix.net."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "latest_episode": {
+        "name": "Latest episode"
+      }
+    }
+  }
+}
